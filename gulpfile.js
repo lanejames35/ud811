@@ -8,7 +8,10 @@ function startServer(){
         ui: false,
         port: 9000,
         server: {
-            baseDir: './1-12-skeleton'
+            baseDir: './1-12-skeleton',
+            routes: {
+                '/node_modules': 'node_modules'
+            }
         }
     });
     watch(['./**/*.html',

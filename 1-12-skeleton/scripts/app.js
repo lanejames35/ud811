@@ -2,6 +2,33 @@
 (function() {
   'use strict';
 
+  var injectedForecast = {
+    key: 'newyork',
+    label: 'New York, NY',
+    currently: {
+      time: 1453489481,
+      summary: 'Clear',
+      icon: 'partly-cloudy-day',
+      temperature: 52.74,
+      apparentTemperature: 74.34,
+      precipProbability: 0.20,
+      humidity: 0.77,
+      windBearing: 125,
+      windSpeed: 1.52
+    },
+    daily: {
+      data: [
+        {icon: 'clear-day', temperatureMax: 55, temperatureMin: 34},
+        {icon: 'rain', temperatureMax: 55, temperatureMin: 34},
+        {icon: 'snow', temperatureMax: 55, temperatureMin: 34},
+        {icon: 'sleet', temperatureMax: 55, temperatureMin: 34},
+        {icon: 'fog', temperatureMax: 55, temperatureMin: 34},
+        {icon: 'wind', temperatureMax: 55, temperatureMin: 34},
+        {icon: 'partly-cloudy-day', temperatureMax: 55, temperatureMin: 34}
+      ]
+    }
+  };
+
   var weatherAPIUrlBase = 'https://publicdata-weather.firebaseio.com/';
 
   var app = {
@@ -15,6 +42,14 @@
     daysOfWeek: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   };
 
+  /*****************************************************************************
+   * 
+   * Functions for storage of selected cities
+   * 
+   *****************************************************************************/
+  function addToStorage(file){
+    localforage.setItem('savedCities', file);
+  }
 
   /*****************************************************************************
    *
@@ -41,6 +76,7 @@
     var label = selected.textContent;
     app.getForecast(key, label);
     app.selectedCities.push({key: key, label: label});
+    addToStorage(app.selectedCities);
     app.toggleAddDialog(false);
   });
 
@@ -150,4 +186,22 @@
     });
   };
 
+  // Check for saved cities
+  // On first load show default
+  window.addEventListener('DOMContentLoaded', function(){
+    localforage.getItem('savedCities').then(function(value){
+      if(value){
+        value.forEach(function(element){
+          app.selectedCities.push({key: element.key, label: element.label});
+          app.getForecast(element.key, element.label);
+        });
+      }else{
+        app.updateForecastCard(injectedForecast);
+        app.selectedCities.push({key: injectedForecast.key, label: injectedForecast.label});
+        addToStorage(app.selectedCities);
+        }
+    }).catch(function(err){
+      console.log(err);
+    });
+  });
 })();
