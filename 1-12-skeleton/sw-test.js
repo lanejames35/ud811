@@ -1,11 +1,13 @@
 // Listen for the install event then open a new cache
-var cacheName = 'weatherPWA';
+var cacheName = 'weatherPWA-shellv2';
+var dataCacheName = 'weatherPWA-datav2';
 var filesToCache = [
   '/',
   '/index.html',
   '/favicon.ico',
   '/styles/ud811.css',
   '/scripts/app.js',
+  '/scripts/localforage.min.js',
   '/images/clear.png',
   '/images/cloudy_s_sunny.png',
   '/images/cloudy-scattered-showers.png',
@@ -21,6 +23,7 @@ var filesToCache = [
   '/images/thunderstorm.png',
   '/images/wind.png'
 ];
+var weatherAPIUrlBase = 'https://publicdata-weather.firebaseio.com/';
 
 self.addEventListener('install', function(event){
   event.waitUntil(
@@ -48,10 +51,29 @@ self.addEventListener('activate', function(event){
 // Serve requested resources or pull from the cache
 self.addEventListener('fetch', function(event){
   console.log('[ServiceWorker Fetch]', event.request.url);
-  event.respondWith(
-    // compare the cache with the requested rerouce
-    caches.match(event.request).then(function(response){
-      return response || fetch(event.request);
-    })
-  );
+  // Run when a call to the data API is made
+  if(event.request.url.startsWith(weatherAPIUrlBase)){
+    event.respondWith(
+      // Get the data
+      fetch(event.request).then(function(response){
+        // Clone the response and put it in the data cache
+        return caches.open(dataCacheName).then(function(cache){
+          cache.put(event.request.url, response.clone());
+          console.log('ServiceWorker [Cloned + cached data]');
+          // return the inital API request
+          return response;
+        });
+      }).catch(function(error){
+          console.log(error);
+      })
+    );
+  } else {
+    // When no API call
+      event.respondWith(
+        // compare the cache with the requested rerouce
+        caches.match(event.request).then(function(response){
+          return response || fetch(event.request);
+        })
+      );  
+  }
 });

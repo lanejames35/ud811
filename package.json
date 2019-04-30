@@ -17,7 +17,8 @@
   "private": false,
   "devDependencies": {
     "browser-sync": "^2.26.5",
-    "gulp": "^4.0.1"
+    "gulp": "^4.0.1",
+    "workbox-build": "^4.3.0"
   },
   "dependencies": {
     "localforage": "^1.7.3"

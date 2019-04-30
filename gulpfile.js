@@ -1,6 +1,11 @@
 const { watch, series } = require('gulp');
 const browserSync = require('browser-sync');
 const server = browserSync.create();
+const { generateSW } = require('workbox-build');
+
+function makeSW(){
+    
+}
 
 function startServer(){
     server.init({

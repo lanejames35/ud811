@@ -8,7 +8,7 @@
   <title>Weather</title>
   <!-- Insert link to stylesheet here -->
   <link rel="stylesheet" href="styles/ud811.css">
-  <script src="node_modules/localforage/dist/localforage.js"></script>
+  <script src="scripts/localforage.min.js"></script>
 </head>
 <body>
 
@@ -21,7 +21,7 @@
   <main class="main">
     <div class="card cardTemplate weather-forecast" hidden>
       <div class="location"></div>
-      <div class="date"></div>
+      <div class="date" data-dt="0"></div>
       <div class="description"></div>
       <div class="current">
         <div class="visual">

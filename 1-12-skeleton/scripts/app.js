@@ -56,14 +56,6 @@
     daysOfWeek: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   };
 
-  /*****************************************************************************
-   * 
-   * Functions for storage of selected cities
-   * 
-   *****************************************************************************/
-  function addToStorage(file){
-    localforage.setItem('savedCities', file);
-  }
 
   /*****************************************************************************
    *
@@ -90,7 +82,6 @@
     var label = selected.textContent;
     app.getForecast(key, label);
     app.selectedCities.push({key: key, label: label});
-    addToStorage(app.selectedCities);
     app.toggleAddDialog(false);
   });
 
@@ -125,11 +116,17 @@
       card.querySelector('.location').textContent = data.label;
       card.removeAttribute('hidden');
       app.container.appendChild(card);
+      app.addToStorage();
       app.visibleCards[data.key] = card;
     }
+    // Verify data is newer than what we already have, if not, bail out.
+    var dataElem = card.querySelector('.date');
+    if(dataElem.getAttribute('data-dt') >= data.currently.time){
+      return;
+    }
+    dataElem.setAttribute('data-dt', data.currently.time);
+    dataElem.textContent = new Date(data.currently.time * 1000);
     card.querySelector('.description').textContent = data.currently.summary;
-    card.querySelector('.date').textContent =
-      new Date(data.currently.time * 1000);
     card.querySelector('.current .icon').classList.add(data.currently.icon);
     card.querySelector('.current .temperature .value').textContent =
       Math.round(data.currently.temperature);
@@ -174,9 +171,26 @@
    ****************************************************************************/
 
   // Gets a forecast for a specific city and update the card with the data
+  // Make a call to the cache first
   app.getForecast = function(key, label) {
-    var url = weatherAPIUrlBase + key + '.json';
+    var dataUrl = weatherAPIUrlBase + key + '.json';
+    if('caches' in window) {
+      caches.match(dataUrl).then(function(response) {
+        if(response){
+          // Only update if the XHR is still pending
+          // Otherwise, XHR has returned data already
+          if(app.hasResultsPending){
+            response.json().then(function(data){
+              data.key = key;
+              data.label = label;
+              app.updateForecastCard(data);
+            });
+          }
+        }
+      });
+    }
     // Make the XHR to get the data, then update the card
+    app.hasResultsPending = true;
     var request = new XMLHttpRequest();
     request.onreadystatechange = function() {
       if (request.readyState === XMLHttpRequest.DONE) {
@@ -184,11 +198,12 @@
           var response = JSON.parse(request.response);
           response.key = key;
           response.label = label;
+          app.hasResultsPending = false;
           app.updateForecastCard(response);
         }
       }
     };
-    request.open('GET', url);
+    request.open('GET', dataUrl);
     request.send();
   };
 
@@ -198,6 +213,11 @@
     keys.forEach(function(key) {
       app.getForecast(key);
     });
+  };
+
+  // Add selected cities to the local storage
+  app.addToStorage = function(){
+    localforage.setItem('savedCities', app.selectedCities);
   };
 
   // Check for saved cities
@@ -212,10 +232,11 @@
       }else{
         app.updateForecastCard(injectedForecast);
         app.selectedCities.push({key: injectedForecast.key, label: injectedForecast.label});
-        addToStorage(app.selectedCities);
+        app.addToStorage(app.selectedCities);
         }
     }).catch(function(err){
       console.log(err);
     });
   });
+
 })();
