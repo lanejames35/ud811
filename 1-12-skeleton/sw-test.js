@@ -5,6 +5,7 @@ var filesToCache = [
   '/',
   '/index.html',
   '/favicon.ico',
+  '/manifest.json',
   '/styles/ud811.css',
   '/scripts/app.js',
   '/scripts/localforage.min.js',

@@ -8,12 +8,14 @@
    ***********************************************************/
   // Feature detect and register service worker
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw-test.js')
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('/sw-test.js')
       .then(function(reg){
         console.log('Registration successful! Scope is ' + reg.scope);
       }).catch(function(err){
         console.log(err);
       });
+    });
   }
 
   var injectedForecast = {
